@@ -1,0 +1,23 @@
+# Secrets
+backend/.env
+
+# Python
+**/__pycache__/
+*.py[cod]
+backend/venv/
+backend/.venv/
+
+# Flutter
+frontend/.dart_tool/
+frontend/build/
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/ios/Flutter/GeneratedConfig.xcconfig
+frontend/android/key.properties
+
+# OS / IDE
+.vscode/
+.idea/
+*.DS_Store
+*.swp
