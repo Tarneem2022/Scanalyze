@@ -26,6 +26,10 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
   AnalysisResult? _analysis1;
   AnalysisResult? _analysis2;
 
+  // Manual IDs (for OCR products)
+  int? _manualId1;
+  int? _manualId2;
+
   @override
   void dispose() {
     _barcode1Controller.dispose();
@@ -37,8 +41,8 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
     final b1 = _barcode1Controller.text.trim();
     final b2 = _barcode2Controller.text.trim();
 
-    if (b1.isEmpty || b2.isEmpty) {
-      setState(() => _error = 'Please enter both barcodes');
+    if ((b1.isEmpty && _manualId1 == null) || (b2.isEmpty && _manualId2 == null)) {
+      setState(() => _error = 'Please enter or scan both products');
       return;
     }
 
@@ -50,14 +54,22 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
     try {
       final api = ref.read(apiServiceProvider);
 
-      // Fetch both products
-      final data1 = await api.getProductByBarcode(b1);
-      final data2 = await api.getProductByBarcode(b2);
-      final p1 = Product.fromJson(data1['product'] as Map<String, dynamic>);
-      final p2 = Product.fromJson(data2['product'] as Map<String, dynamic>);
+      // Fetch or use products
+      int? id1 = _manualId1;
+      int? id2 = _manualId2;
+
+      if (id1 == null) {
+        final data1 = await api.getProductByBarcode(b1);
+        id1 = Product.fromJson(data1['product'] as Map<String, dynamic>).id;
+      }
+
+      if (id2 == null) {
+        final data2 = await api.getProductByBarcode(b2);
+        id2 = Product.fromJson(data2['product'] as Map<String, dynamic>).id;
+      }
 
       // Compare
-      final compareData = await api.compareProducts(p1.id, p2.id);
+      final compareData = await api.compareProducts(id1, id2);
       final comparison = compareData['comparison'] as Map<String, dynamic>;
 
       setState(() {
@@ -70,7 +82,37 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _error = 'Could not find or compare products. Check barcodes.';
+        _error = 'Could not find or compare products. Check barcodes or try again.';
+      });
+    }
+  }
+
+  Future<void> _scanBarcode(int slot) async {
+    final result = await context.push<String>('/barcode?action=return');
+    if (result != null) {
+      setState(() {
+        if (slot == 1) {
+          _barcode1Controller.text = result;
+          _manualId1 = null;
+        } else {
+          _barcode2Controller.text = result;
+          _manualId2 = null;
+        }
+      });
+    }
+  }
+
+  Future<void> _scanOcr(int slot) async {
+    final result = await context.push<Product>('/ocr?action=return');
+    if (result != null) {
+      setState(() {
+        if (slot == 1) {
+          _barcode1Controller.text = 'OCR: ${result.name}';
+          _manualId1 = result.id;
+        } else {
+          _barcode2Controller.text = 'OCR: ${result.name}';
+          _manualId2 = result.id;
+        }
       });
     }
   }
@@ -97,9 +139,23 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
             TextField(
               controller: _barcode1Controller,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              onChanged: (val) => setState(() => _manualId1 = null),
+              decoration: InputDecoration(
                 hintText: 'Product 1 barcode',
-                prefixIcon: Icon(Icons.looks_one_rounded, color: AppTheme.primary),
+                prefixIcon: const Icon(Icons.looks_one_rounded, color: AppTheme.primary),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primary),
+                      onPressed: () => _scanBarcode(1),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.text_fields_rounded, color: AppTheme.primary),
+                      onPressed: () => _scanOcr(1),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -108,9 +164,23 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
             TextField(
               controller: _barcode2Controller,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              onChanged: (val) => setState(() => _manualId2 = null),
+              decoration: InputDecoration(
                 hintText: 'Product 2 barcode',
-                prefixIcon: Icon(Icons.looks_two_rounded, color: AppTheme.secondary),
+                prefixIcon: const Icon(Icons.looks_two_rounded, color: AppTheme.secondary),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.secondary),
+                      onPressed: () => _scanBarcode(2),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.text_fields_rounded, color: AppTheme.secondary),
+                      onPressed: () => _scanOcr(2),
+                    ),
+                  ],
+                ),
               ),
             ),
 

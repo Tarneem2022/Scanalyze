@@ -46,6 +46,16 @@ class _BarcodeScreenState extends ConsumerState<BarcodeScreen> {
 
   Future<void> _lookupBarcode(String barcode) async {
     if (_isProcessing) return;
+    
+    // Check if we should return the barcode instead of navigating
+    final uri = GoRouterState.of(context).uri;
+    final isReturn = uri.queryParameters['action'] == 'return';
+
+    if (isReturn) {
+      context.pop(barcode);
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _error = null;

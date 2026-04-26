@@ -8,6 +8,7 @@ import '../config/theme.dart';
 import '../services/api_service.dart';
 import '../models/product.dart';
 import '../models/analysis_result.dart';
+import '../providers/auth_provider.dart';
 
 /// 6.4 - Product Analysis Result Screen.
 class AnalysisScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   }
 
   Future<void> _toggleFavorite() async {
+    final authState = ref.read(authProvider);
+    if (!authState.isAuthenticated) {
+      if (mounted) {
+        context.push('/auth');
+      }
+      return;
+    }
+
     if (_product == null) return;
     final api = ref.read(apiServiceProvider);
     try {

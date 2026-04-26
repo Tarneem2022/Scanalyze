@@ -36,7 +36,21 @@ class _ScanalyzeAppState extends ConsumerState<ScanalyzeApp> {
     final router = GoRouter(
       initialLocation: '/',
       redirect: (context, state) {
-        // Bypass login screen entirely
+        final loggingIn = state.matchedLocation == '/auth';
+        final isAuth = authState.isAuthenticated;
+
+        // Protected routes
+        final protectedRoutes = ['/history', '/favorites', '/profile', '/compare'];
+        final isProtected = protectedRoutes.any((route) => state.matchedLocation.startsWith(route));
+
+        if (!isAuth && isProtected) {
+          return '/auth';
+        }
+
+        if (isAuth && loggingIn) {
+          return '/';
+        }
+
         return null;
       },
       routes: [

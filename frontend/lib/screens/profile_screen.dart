@@ -94,16 +94,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppTheme.textMuted),
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-              context.go('/auth');
-            },
-          ),
-        ],
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
           : SingleChildScrollView(
@@ -196,6 +188,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     },
                     hintText: 'Add ingredient (e.g., palm oil)',
                   ),
+                  const SizedBox(height: 48),
+                  
+                  // ─── Logout Button ───
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(authProvider.notifier).logout();
+                        context.go('/');
+                      },
+                      icon: const Icon(Icons.logout_rounded, size: 24),
+                      label: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.bgDark,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

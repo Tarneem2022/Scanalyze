@@ -45,11 +45,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> checkAuth() async {
     state = state.copyWith(isLoading: true);
     try {
-      // Quietly log in as test user behind the scenes
-      await login('test@scanalyze.com', 'test123');
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      
+      if (token != null) {
+        final data = await _api.getCurrentUser();
+        state = AuthState(
+          isAuthenticated: true,
+          token: token,
+          user: data['user'] as Map<String, dynamic>?,
+        );
+      } else {
+        state = const AuthState();
+      }
     } catch (_) {
-      // If backend is off, it fails silently, app proceeds in 'Guest mode'. 
-      // API requests will simply show standard "connection failed" errors in UI.
       state = const AuthState();
     }
   }

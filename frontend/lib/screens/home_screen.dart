@@ -23,18 +23,48 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 8),
 
-              // ─── Greeting ───
-              Text(
-                'Hello, $userName 👋',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ).animate().fadeIn(duration: 500.ms),
-
-              const SizedBox(height: 4),
-
-              Text(
-                'Analyze product safety in seconds',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ).animate().fadeIn(delay: 200.ms),
+              // ─── Greeting / Auth Prompt ───
+              if (authState.isAuthenticated) ...[
+                Text(
+                  'Hello, $userName 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ).animate().fadeIn(duration: 500.ms),
+                const SizedBox(height: 4),
+                Text(
+                  'Analyze product safety in seconds',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ).animate().fadeIn(delay: 200.ms),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Join Scanalyze ✨',
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ).animate().fadeIn(duration: 500.ms),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Log in to save history and favorites',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ).animate().fadeIn(delay: 200.ms),
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: () => context.push('/auth'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.bgDark,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        minimumSize: Size.zero,
+                      ),
+                      child: const Text('Sign In', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    ).animate().fadeIn(delay: 400.ms),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 32),
 

@@ -85,8 +85,16 @@ class _OcrScreenState extends ConsumerState<OcrScreen> {
         name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
       );
 
+      if (!mounted) return;
+      final uri = GoRouterState.of(context).uri;
+      final isReturn = uri.queryParameters['action'] == 'return';
+
       if (mounted) {
-        context.pushReplacement('/analysis/${product.id}');
+        if (isReturn) {
+          context.pop(product);
+        } else {
+          context.pushReplacement('/analysis/${product.id}');
+        }
       }
     } catch (e) {
       setState(() {
