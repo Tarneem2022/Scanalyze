@@ -67,19 +67,26 @@ def fetch_product(barcode: str) -> dict | None:
 
 
 def _extract_category(product: dict) -> str:
-    """Extract the most relevant category from product data."""
-    # Try categories hierarchy (most specific first)
+    """Extract all categories from product data, cleaning language prefixes."""
+    categories_list = []
+    
+    # Try categories hierarchy first
     categories = product.get('categories_hierarchy', [])
     if categories:
-        # Get last (most specific) category, clean the language prefix
-        cat = categories[-1]
-        if ':' in cat:
-            cat = cat.split(':', 1)[1]
-        return cat.replace('-', ' ').title()
+        for cat in categories:
+            if ':' in cat:
+                cat = cat.split(':', 1)[1]
+            categories_list.append(cat.replace('-', ' ').title())
+        return ', '.join(categories_list)
 
     # Fallback to categories string
     cats = product.get('categories', '')
     if cats:
-        return cats.split(',')[0].strip()
+        for cat in cats.split(','):
+            cat = cat.strip()
+            if ':' in cat:
+                cat = cat.split(':', 1)[1]
+            categories_list.append(cat.replace('-', ' ').title())
+        return ', '.join(categories_list)
 
     return ''

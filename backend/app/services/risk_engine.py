@@ -131,16 +131,8 @@ def evaluate_product(product: Product, user_id: int) -> AnalysisResult:
     else:
         safety_class = 'UNSAFE'
 
-    # Add summary alert if many unclassified ingredients
-    unclassified = num_ingredients - classified_count
-    if unclassified > 0:
-        pct = (unclassified / num_ingredients * 100) if num_ingredients > 0 else 0
-        alerts.append({
-            'severity': 'INFO',
-            'type': 'UNCLASSIFIED',
-            'ingredient': None,
-            'message': f'ℹ️ {unclassified} ingredient(s) ({pct:.0f}%) could not be identified in our database',
-        })
+
+
 
     # Create and save the analysis result
     result = AnalysisResult(

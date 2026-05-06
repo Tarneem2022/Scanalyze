@@ -45,12 +45,30 @@ def fetch_product(barcode: str) -> dict | None:
             if name:
                 structured_ingredients.append(name)
 
+        # Extract categories - prefer hierarchy (full list) over plain categories
+        cats_list = []
+        categories_hierarchy = product.get('categories_hierarchy', [])
+        if categories_hierarchy:
+            for cat in categories_hierarchy:
+                if ':' in cat:
+                    cat = cat.split(':', 1)[1]
+                cats_list.append(cat.replace('-', ' ').title())
+        else:
+            raw_cats = product.get('categories', '')
+            if raw_cats:
+                for cat in raw_cats.split(','):
+                    cat = cat.strip()
+                    if ':' in cat:
+                        cat = cat.split(':', 1)[1]
+                    cats_list.append(cat.replace('-', ' ').title())
+        category_str = ', '.join(cats_list)
+
         result = {
             'barcode': barcode,
             'name': product.get('product_name_en') or product.get('product_name') or 'Unknown Product',
             'brand': product.get('brands') or '',
             'image_url': product.get('image_front_url') or product.get('image_url') or '',
-            'category': product.get('categories', '').split(',')[0].strip() if product.get('categories') else '',
+            'category': category_str,
             'ingredients_text': ingredients_text,
             'structured_ingredients': structured_ingredients,
             'source': 'openbeautyfacts',

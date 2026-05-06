@@ -31,7 +31,7 @@ class Product {
       name: json['name'] as String? ?? 'Unknown Product',
       brand: json['brand'] as String?,
       imageUrl: json['image_url'] as String?,
-      category: json['category'] as String?,
+      category: _cleanCategory(json['category'] as String?),
       source: json['source'] as String? ?? 'API',
       rawIngredientsText: json['raw_ingredients_text'] as String?,
       createdAt: json['created_at'] as String?,
@@ -40,6 +40,27 @@ class Product {
               .toList() ??
           [],
     );
+  }
+
+  static String? _cleanCategory(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    
+    // Split by comma in case there are multiple, clean each one
+    final parts = raw.split(',');
+    final cleaned = parts.map((cat) {
+      cat = cat.trim();
+      // Remove language prefix like en: or fr:
+      if (cat.contains(':')) {
+        cat = cat.split(':').sublist(1).join(':').trim();
+      }
+      // Replace dashes with spaces
+      cat = cat.replaceAll('-', ' ');
+      // Capitalize first letter of each word (Title Case)
+      return cat.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}' : '').join(' ');
+    }).where((cat) => cat.isNotEmpty).toList();
+
+    if (cleaned.isEmpty) return null;
+    return cleaned.join(', ');
   }
 }
 

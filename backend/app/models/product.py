@@ -13,7 +13,7 @@ class Product(db.Model):
     name = db.Column(db.String(500), nullable=False)
     brand = db.Column(db.String(255), nullable=True)
     image_url = db.Column(db.Text, nullable=True)
-    category = db.Column(db.String(255), nullable=True)
+    category = db.Column(db.Text, nullable=True)
     source = db.Column(db.Enum('API', 'OCR', name='product_source'), nullable=False, default='API')
     raw_ingredients_text = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

@@ -205,96 +205,124 @@ class _ProductHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: AppTheme.cardGradient,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: AppTheme.bgCardLight),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Product image
+          // Full-width Product image banner
           if (product.imageUrl != null && product.imageUrl!.isNotEmpty)
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.radiusLg),
+                topRight: Radius.circular(AppTheme.radiusLg),
+              ),
               child: CachedNetworkImage(
                 imageUrl: product.imageUrl!,
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 300,
+                fit: BoxFit.contain, // Show full image without cropping
                 placeholder: (_, __) => Container(
-                  width: 72,
-                  height: 72,
+                  width: double.infinity,
+                  height: 300,
                   color: AppTheme.bgCardLight,
-                  child: const Icon(Icons.image_rounded, color: AppTheme.textMuted),
+                  child: const Icon(Icons.image_rounded, color: AppTheme.textMuted, size: 48),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  width: 72,
-                  height: 72,
+                  width: double.infinity,
+                  height: 300,
                   color: AppTheme.bgCardLight,
-                  child: const Icon(Icons.broken_image_rounded, color: AppTheme.textMuted),
+                  child: const Icon(Icons.broken_image_rounded, color: AppTheme.textMuted, size: 48),
                 ),
               ),
             )
           else
             Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
+              width: double.infinity,
+              height: 300,
+              decoration: const BoxDecoration(
                 color: AppTheme.bgCardLight,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.radiusLg),
+                  topRight: Radius.circular(AppTheme.radiusLg),
+                ),
               ),
-              child: const Icon(Icons.inventory_2_rounded, color: AppTheme.textMuted, size: 32),
+              child: const Icon(Icons.inventory_2_rounded, color: AppTheme.textMuted, size: 64),
             ),
 
-          const SizedBox(width: 16),
-
-          Expanded(
+          // Product info below the image
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   product.name,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                  textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 8),
+
                 if (product.brand != null && product.brand!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    product.brand!,
-                    style: Theme.of(context).textTheme.bodySmall,
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                      children: [
+                        const TextSpan(
+                          text: 'Brand: ',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                        TextSpan(text: product.brand!),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 8),
                 ],
+                // Show categories similar to brand with label
+                if (product.category != null && product.category!.isNotEmpty) ...[
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text: 'Categories: ',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                        TextSpan(text: product.category!),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
                 if (product.barcode != null) ...[
-                  const SizedBox(height: 4),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.qr_code_2_rounded, size: 14, color: AppTheme.textMuted),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.qr_code_2_rounded, size: 16, color: AppTheme.textMuted),
+                      const SizedBox(width: 6),
                       Text(
                         product.barcode!,
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                              letterSpacing: 1.2,
+                            ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
                 ],
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: product.source == 'API' ? AppTheme.infoBg : AppTheme.warningBg,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    product.source == 'API' ? 'API Product' : 'OCR Scanned',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: product.source == 'API' ? AppTheme.accent : AppTheme.moderate,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -490,112 +518,108 @@ class _AlertCard extends StatelessWidget {
   }
 }
 
-/// ─── Ingredient Tile ───
+/// ─── Ingredient Tile (Expandable) ───
 class _IngredientTile extends StatelessWidget {
   final IngredientAnalysis detail;
   const _IngredientTile({required this.detail});
 
+  /// Maps a numeric risk score to a color.
+  Color _riskColor(double score) {
+    if (score <= 2) return AppTheme.safe;
+    if (score <= 4) return const Color(0xFF8BC34A);
+    if (score <= 6) return AppTheme.moderate;
+    if (score <= 8) return const Color(0xFFFF7043);
+    return AppTheme.unsafe;
+  }
+
+  /// Converts a risk level code to a readable label.
+  String _safetyLabel(String riskLevel) {
+    switch (riskLevel.toUpperCase()) {
+      case 'SAFE':       return 'Safe';
+      case 'LOW':        return 'Low Risk';
+      case 'MODERATE':   return 'Moderate';
+      case 'HIGH':       return 'High Risk';
+      case 'DANGEROUS':  return 'Dangerous';
+      default:           return riskLevel;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final riskColor = _riskColor(detail.riskScore);
+    final hasDescription = detail.description != null && detail.description!.isNotEmpty;
+
+    // Build the safety badge shown on the right side
+    final safetyBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: riskColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: riskColor.withAlpha(60)),
+      ),
+      child: Text(
+        _safetyLabel(detail.riskLevel),
+        style: TextStyle(color: riskColor, fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+    );
+
+    // Build the ingredient name + optional "Unclassified" subtitle
+    final title = Text(
+      detail.rawName,
+      style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w500, fontSize: 14),
+    );
+    final subtitle = !detail.isClassified
+        ? const Text('Unclassified', style: TextStyle(color: AppTheme.textMuted, fontSize: 11, fontStyle: FontStyle.italic))
+        : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: AppTheme.bgCardLight),
       ),
-      child: Row(
-        children: [
-          // Risk indicator
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: riskColor.withAlpha(25),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            ),
-            child: Center(
-              child: Text(
-                detail.riskScore.toStringAsFixed(0),
-                style: TextStyle(
-                  color: riskColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  detail.rawName,
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: riskColor.withAlpha(20),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        detail.riskLevel,
-                        style: TextStyle(color: riskColor, fontSize: 10, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    if (detail.matchedName != null && detail.matchedName != detail.rawName) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '→ ${detail.matchedName}',
-                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
-                      ),
-                    ],
-                    if (!detail.isClassified) ...[
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Unclassified',
-                        style: TextStyle(color: AppTheme.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ],
-                ),
-                if (detail.description != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    detail.description!,
-                    style: const TextStyle(color: AppTheme.textMuted, fontSize: 11, height: 1.3),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+      child: hasDescription
+          // Expandable tile — tapping the arrow reveals the description
+          ? ExpansionTile(
+              title: title,
+              subtitle: subtitle,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  safetyBadge,
+                  const SizedBox(width: 6),
+                  const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textMuted, size: 22),
                 ],
+              ),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              shape: const Border(),           // Remove default ExpansionTile border
+              collapsedShape: const Border(),  // Remove default collapsed border
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: riskColor.withAlpha(8),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: riskColor.withAlpha(30)),
+                  ),
+                  child: Text(
+                    detail.description!,
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5),
+                  ),
+                ),
               ],
+            )
+          // Non-expandable tile — no description available
+          : ListTile(
+              title: title,
+              subtitle: subtitle,
+              trailing: safetyBadge,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             ),
-          ),
-        ],
-      ),
     );
   }
-
-  Color _riskColor(double score) {
-    if (score <= 2) return AppTheme.safe;
-    if (score <= 4) return const Color(0xFF8BC34A); // light green
-    if (score <= 6) return AppTheme.moderate;
-    if (score <= 8) return const Color(0xFFFF7043); // orange-red
-    return AppTheme.unsafe;
-  }
 }
+

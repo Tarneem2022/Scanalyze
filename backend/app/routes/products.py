@@ -14,13 +14,27 @@ def get_product_by_barcode(barcode):
     """Look up a product by barcode.
 
     Search order:
-    1. Local database
+    1. Local database (used for caching)
     2. OpenFoodFacts API
     3. OpenBeautyFacts API
     """
     # 1. Check local DB first
     product = Product.query.filter_by(barcode=barcode).first()
     if product:
+        # Refresh categories from API to ensure we have the latest full list
+        off_data = openfoodfacts.fetch_product(barcode)
+        if off_data and off_data.get('category'):
+            if product.category != off_data['category']:
+                product.category = off_data['category']
+                db.session.commit()
+            return jsonify({'product': product.to_dict(), 'source': 'database'}), 200
+        obf_data = openbeautyfacts.fetch_product(barcode)
+        if obf_data and obf_data.get('category'):
+            if product.category != obf_data['category']:
+                product.category = obf_data['category']
+                db.session.commit()
+            return jsonify({'product': product.to_dict(), 'source': 'database'}), 200
+        # If API fetch fails, just return cached product
         return jsonify({'product': product.to_dict(), 'source': 'database'}), 200
 
     # 2. Try OpenFoodFacts

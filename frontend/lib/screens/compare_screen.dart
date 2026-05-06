@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../config/theme.dart';
 import '../services/api_service.dart';
 import '../models/product.dart';
@@ -88,7 +89,11 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
   }
 
   Future<void> _scanBarcode(int slot) async {
-    final result = await context.push<String>('/barcode?action=return');
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const _BarcodeScannerForCompare(),
+      ),
+    );
     if (result != null) {
       setState(() {
         if (slot == 1) {
@@ -348,6 +353,88 @@ class _ComparisonSummary extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Lightweight barcode scanner used only by Compare screen.
+/// Uses Navigator.push/pop instead of GoRouter to avoid redirect issues.
+class _BarcodeScannerForCompare extends StatefulWidget {
+  const _BarcodeScannerForCompare();
+
+  @override
+  State<_BarcodeScannerForCompare> createState() => _BarcodeScannerForCompareState();
+}
+
+class _BarcodeScannerForCompareState extends State<_BarcodeScannerForCompare> {
+  MobileScannerController? _controller;
+  bool _scanned = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      facing: CameraFacing.back,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    if (_scanned) return;
+    final barcodes = capture.barcodes;
+    if (barcodes.isEmpty) return;
+    final barcode = barcodes.first.rawValue;
+    if (barcode == null || barcode.isEmpty) return;
+
+    _scanned = true;
+    Navigator.of(context).pop(barcode);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scan Barcode'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: _controller!,
+            onDetect: _onDetect,
+          ),
+          Container(color: Colors.black.withAlpha(120)),
+          Center(
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.primary, width: 2),
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              ),
+            ),
+          ),
+          const Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Text(
+              'Point camera at barcode',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );
